@@ -1,8 +1,8 @@
 {
-	"name": "file-explorer",
+	"name": "tcp-chat",
 	"version": "0.0.1",
 	"main": "./index",
 	"private": "true",
-	"description": "A command-line tool for file exploring",
+	"description": "Simple TCP server",
 	"dependencies": {}
 }

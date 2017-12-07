@@ -6,11 +6,12 @@ var server = http.createServer(function(req, res) {
 	});
 	req.on('end', function() {
 		console.log('All the data is ready');
+		console.log(buf);
 	});
 	res.writeHead(200, {'Content-Type': 'text/plain'});
 	res.end("Connected\n");
-}).listen(80, "127.0.0.1");
-console.log('Server running at http://127.0.0.1:80/');
+}).listen(3000, "127.0.0.1");
+console.log('Server running at http://127.0.0.1:3000/');
 
 Date.prototype.__defineGetter__('ago', function() {
 	var diff = (((new Date()).getTime() - this.getTime()) / 1000)
