@@ -10,7 +10,6 @@ var server = net.createServer(function(connection) {
 			   		 '\n > ' + count + ' total peers connected' +
 			   		 '\n > Please enter your name and press enter: '
 	);
-
 	connection.setEncoding('utf8');
 	connection.on('data', function(data) {
 		// console.log(data.toString('utf8'));

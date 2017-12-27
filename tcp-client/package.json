@@ -1,0 +1,8 @@
+{
+	"name": "tcp-client",
+	"version": "0.0.1",
+	"main": "./index",
+	"private": "true",
+	"description": "Simple TCP client",
+	"dependencies": {}
+}
