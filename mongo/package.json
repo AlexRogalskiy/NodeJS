@@ -1,0 +1,15 @@
+{
+	"name": "mongo-showcase",
+	"version": "0.0.1",
+	"main": "./index",
+	"private": "true",
+	"description": "A simple Mongo showcase",
+	"dependencies": {
+		"cookie-parser": "1.4.3",
+		"express": "4.16.2",
+		"express-session": "1.15.6",
+		"method-override": "2.3.10",
+		"mongodb": "2.2.19",
+		"pug": "2.0.0-rc.4"
+	}
+}

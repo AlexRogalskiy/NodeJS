@@ -28,7 +28,7 @@ module.exports = function(options) {
 		res.end = function(chunk, encoding) {
 			res.end = end;
 			res.end(chunk, encoding);
-			clearTimeout(times);
+			clearTimeout(timer);
 		};
 		next();
 	}
