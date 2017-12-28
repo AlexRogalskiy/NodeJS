@@ -1,0 +1,8 @@
+{
+	"name": "tcp-chat",
+	"version": "0.0.1",
+	"main": "./index",
+	"private": "true",
+	"description": "Simple TCP server",
+	"dependencies": {}
+}

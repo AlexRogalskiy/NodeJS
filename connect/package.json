@@ -1,0 +1,12 @@
+{
+	"name": "connect-showcase",
+	"version": "0.0.1",
+	"main": "./index",
+	"private": "true",
+	"description": "A Simple connect showcase",
+	"dependencies": {
+		"connect": "1.8.7",
+		"connect-redis": "3.3.2",
+		"mime-types": "2.1.17"
+	}
+}
