@@ -1,8 +1,0 @@
-{
-	"name": "up-lifecycle",
-	"version": "0.0.1",
-	"main": "./index",
-	"private": "true",
-	"description": "A command-line tool for app lifecycle",
-	"dependencies": {}
-}

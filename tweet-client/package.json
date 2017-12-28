@@ -1,8 +1,0 @@
-{
-	"name": "tweet-client",
-	"version": "0.0.1",
-	"main": "./index",
-	"private": "true",
-	"description": "Simple Tweeeter client",
-	"dependencies": {}
-}

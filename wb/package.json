@@ -1,8 +1,0 @@
-{
-	"name": "wb-showcase",
-	"version": "0.0.1",
-	"main": "./index",
-	"private": "true",
-	"description": "A Simple WB showcase",
-	"dependencies": {}
-}
