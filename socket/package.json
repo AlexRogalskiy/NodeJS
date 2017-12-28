@@ -1,0 +1,11 @@
+{
+	"name": "socket-showcase",
+	"version": "0.0.1",
+	"main": "./index",
+	"private": "true",
+	"description": "A Simple Socket showcase",
+	"dependencies": {
+		"express": "4.16.2",
+		"socket.io": "0.9.2"
+	}
+}
