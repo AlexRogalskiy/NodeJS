@@ -1,0 +1,38 @@
+// item.pug
+include layout
+
+-
+    var title = 'Item'
+    var description = 'Item'
+
+block bock
+  a(href="/") Back
+
+  h2= item.title
+  p= item.description
+
+  h2 User reviews
+
+  if(reviews.length)
+    each review in reviews
+      .review
+        b #{review.stars} stars
+        p= review.text
+      hr
+  else
+    p No reviews to show!
+
+  form(action="/item/" + item.id + "/review", method="POST")
+    fieldset
+      legend Create review
+      p
+        label Stars
+        select(name="stars")
+          option 1
+          option 2
+          option 3
+      p
+        label Review
+        textarea(name="text")
+      p
+        button(type="submit") Send

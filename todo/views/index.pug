@@ -1,0 +1,15 @@
+// index.pug
+include layout
+
+block body
+  h2 Projects
+
+  #list
+    ul#projects-list
+      each project in projects
+        li
+          a(href="/project/" + project.id + "/tasks")= project.title
+          a.delete(href="/project/" + project.id) X
+    form#add(action="/projects", method="POST")
+      input(type="text", name="title")
+      button(type="submit") Add

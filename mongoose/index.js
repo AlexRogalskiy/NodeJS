@@ -32,16 +32,16 @@ app.get('/login/:signupEmail?', function(req, res, next) {
 	res.render('login', { signupEmail: req.params.signupEmail });
 });
 app.post('/signup', function(req, res, next) {
-	app.users.insert(req.body.user, function(err, doc) {
+	var user = new User(req.body.user).save(function(err) {
 		if(err) return next(err);
-		res.redirect('/login/' + doc.ops[0].email);
+		res.redirect('/login/');
 	});
 });
 app.get('/signup', function(req, res, next) {
 	res.render('signup');
 });
 app.post('/login', function(req, res, next) {
-	app.users.findOne({ email: req.body.user.email, password: req.body.user.password }, function(err, doc) {
+	User.findOne({ email: req.body.user.email, password: req.body.user.password }, function(err, doc) {
 		if(err) return next(err);
 		if(!doc) return res.send('<p>User is not found</p>');
 		req.session.loggedIn = doc._id.toString();
@@ -55,7 +55,7 @@ app.get('/logout', function(req, res) {
 app.use(function(req, res, next) {
 	if(req.session.loggedIn) {
 		res.local('authenticated', true);
-		app.users.findOne({ _id: { $oid: req.session.loggedIn } }, function(err, doc) {
+		User.findById(req.session.loggedIn, function(err, doc) {
 			if(err) return next(err);
 			res.local('me', doc);
 			next();
@@ -113,9 +113,18 @@ PostSchema.pre('remove', function(next) {
 
 var Post = mongoose.model('BlogPost', PostSchema);
 //var Post = mongoose.model('BlogPost');
-new Post({title: 'Title'}).save(function(err) {
-	console.log('saved');
-});
+// new Post({title: 'Title'}).save(function(err) {
+// 	console.log('post is saved');
+// });
+var User = mongoose.model('User', new Schema({
+	first: String,
+	last: String,
+	email: { type: String, unique: true },
+	password: { type: String, index: true }
+}));
+// new User({ email: 'email', password: 'password' }).save(function(err) {
+// 	console.log('user is saved');
+// })
 //db.blogposts.find({ 'meta.votes': 5 });
 Post.find({author: 'asdfasdfafsd'})
 	.where('title', '')
@@ -135,10 +144,6 @@ Post.find({title: ''})
 	// 	console.log(doc.author.email);
 	// });
 //-----------------------------------------------
-
-var User = mongoose.model('User', new Schema({
-
-}));
 
 app.listen(3000, function() {
 	console.log('\033[96m + \033[39m app is listening on *:3000');

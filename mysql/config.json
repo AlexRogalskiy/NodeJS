@@ -1,0 +1,7 @@
+{
+	"user": "root",
+	"password": "toor",
+	"host": "localhost", 
+	"database": "cartdb",
+	"connectionLimit": "10"
+}
