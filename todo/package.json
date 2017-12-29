@@ -1,9 +1,9 @@
 {
-	"name": "mongo-showcase",
+	"name": "mysql-showcase",
 	"version": "0.0.1",
 	"main": "./index",
 	"private": "true",
-	"description": "A simple Mongo showcase",
+	"description": "A simple MySql showcase",
 	"dependencies": {
 		"cookie-parser": "1.4.3",
 		"express": "4.16.2",
