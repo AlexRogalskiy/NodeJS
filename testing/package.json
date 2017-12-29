@@ -1,0 +1,14 @@
+{
+	"name": "testing-showcase",
+	"version": "0.0.1",
+	"main": "./index",
+	"private": "true",
+	"description": "A simple Testing showcase",
+	"dependencies": {
+		"expect.js": "0.3.1",
+		"mocha": "4.1.0",
+		"pug": "2.0.0-rc.4",
+		"serve": "6.4.3",
+		"suite": "0.1.2"
+	}
+}
