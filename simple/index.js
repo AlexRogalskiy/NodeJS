@@ -17,8 +17,6 @@ var handlebars = require('express-handlebars').create({
   	extname: 'handlebars'
 });
 
-var fs = require('fs');
-
 var app = module.exports = express();
 app.engine('handlebars', handlebars.engine);
 
@@ -51,6 +49,7 @@ app.set(methodOverride());
 // //$NODE_ENV=production node server
 app.use('production', function() {
 	app.enable('view cache');
+	app.disable('x-powered-by');
 });
 app.use('development', function() {
 	app.disable('view cache');
@@ -83,6 +82,15 @@ app.get('/', function(req, res, next) {
 	res.render('home');//{ authenticated : false }
 });
 
+app.get('/headers', function(req, res, next) {
+	res.set('Content-Type', 'text/plain');
+	var s = '';
+	for(var name in req.headers) {
+		s += name + ' : ' + req.headers[name] + '\n';
+	}
+	res.send(s);
+});
+
 app.get('/categories', function(req, res, next) {
 	res.type('text/html');
 	res.send('categories');
@@ -109,8 +117,44 @@ app.get('/tours/price-group-rate', function(req, res) {
 	res.render('tours/price-group-rate');
 });
 
-app.get('roadmap', secure, function() {
-	//
+app.get('/greeting', function(req, res) {
+	res.render('about', {
+		message: 'welcome',
+		style: req.query.style,
+		userid: req.cookie.userid,
+		username: req.session.username,
+	});
+});
+
+app.get('/no-layout', function(req, res) {
+	res.render('no-layout', { layout: null });
+});
+
+app.get('/custom-layout', function(req, res) {
+	res.render('custom-layout', { layout: 'custom' });
+});
+
+app.get('/test', function(req, res) {
+	res.type('text/plain');
+	res.send('');
+});
+
+app.get('/api/tours', function(req, res) {
+	var tours = [
+		{ id: 0, name: 'Prime', price: 100 },
+		{ id: 1, name: 'Fast', price: 170 },
+	];
+	res.json(tours);
+});
+
+app.get('/process-contact', function(req, res) {
+	console.log('Details: name=' + req.body.name + ', email=' + req.body.email);
+	try {
+		//saving data to db
+		return res.xhr ? res.render({success: true}) : res.redirect(303, '/acknowledge');
+	} catch(ex) {
+		return res.xhr ? res.json({error: 'DB error'}) : res.redirect(303, '/db-error');
+	}
 });
 
 app.get('roadmap', secure, function() {
@@ -138,13 +182,11 @@ app.get('/search', function(req, res, next) {
 //-----------------------------------------------------
 
 app.use(function(req, res) {
-	res.status(404);
-	res.render('404', { status: 404, fortune: fortune.getFortune() });
+	res.status(404).render('404', { status: 404, fortune: fortune.getFortune() });
 });
 app.use(function(err, req, res, next) {
 	console.log(err);
-	res.status(500);
-	res.render('500', { status: 500 });
+	res.status(500).render('500', { status: 500 });
 });
 
 //-----------------------------------------------------
@@ -156,6 +198,7 @@ function secure(req, res, next) {
 	}
 	next();
 }
+//var fs = require('fs');
 //serverStatic(res, '/public/about.html', 'text/html')
 //serverStatic(res, '/public/img/logo.jpg', 'image/jpeg')
 //var path = req.url.replace(/\/?(?:\?.*)?$/, '').toLowerCase();
@@ -172,3 +215,10 @@ function secure(req, res, next) {
 // 		}
 // 	});
 // };
+
+//req.acceptedLanguages
+//req.url / req.originalUrl
+
+//res.format({ 'text/plain': '', 'text/html': '<b></b>' });
+//res.sendFile(path, options, callback);
+//res.render(view, locals, callback);
