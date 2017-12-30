@@ -7,7 +7,7 @@ var cookieParser = require('cookie-parser');
 var methodOverride = require('method-override');
 var session = require('express-session');
 var path = require('path');
-var appConfig = require('./app.config');
+var fortune = require('./lib/fortune');
 
 var handlebars = require('express-handlebars').create({
 	layoutsDir: path.join(__dirname, 'public/views/layouts'),
@@ -112,9 +112,8 @@ app.get('/search', function(req, res, next) {
 //-----------------------------------------------------
 
 app.use(function(req, res) {
-	var randomFortune = appConfig.app.fortunes[Math.floor(Math.random() * appConfig.app.fortunes.length)];
 	res.status(404);
-	res.render('404', { status: 404, fortune: randomFortune });
+	res.render('404', { status: 404, fortune: fortune.getFortune() });
 });
 app.use(function(err, req, res, next) {
 	console.log(err);
