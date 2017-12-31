@@ -1,3 +1,8 @@
+# Node packages
 node_modules
+
+# Temp files
 *~
+
+# Mac OS
 .DS_Store
