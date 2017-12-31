@@ -78,6 +78,12 @@ app.listen(app.get('port'), function() {
 
 //-----------------------------------------------------
 
+var tours = [
+	{ id: 0, name: 'Prime', price: 100 },
+	{ id: 1, name: 'Fast', price: 170 },
+	{ id: 2, name: 'Slow', price: 100 },
+];
+
 app.get('/', function(req, res, next) {
 	res.render('home');//{ authenticated : false }
 });
@@ -139,12 +145,56 @@ app.get('/test', function(req, res) {
 	res.send('');
 });
 
+app.put('/api/tour/:id', function(req, res) {
+	var tour = tours.filter(function(tour) {
+		return tour.id === req.params.id;
+	})[0];
+	if(tour) {
+		tour.name = req.query.name || '';
+		tour.price = req.query.price || '';
+		res.json({ success: true });
+	}
+	res.json({ 'error': 'Tour not found' });
+});
+
+app.put('/api/tour/:id', function(req, res) {
+	var i = -1;
+	for(i=tours.length-1; i>=0; i--) {
+		if(tours[i].id === req.params.id) break;
+	}
+	if(i >= 0) {
+		tours.splice(i, 1);
+		res.json({ success: true });
+	}
+	res.json({ error: 'Tour not found' });
+});
+
 app.get('/api/tours', function(req, res) {
-	var tours = [
-		{ id: 0, name: 'Prime', price: 100 },
-		{ id: 1, name: 'Fast', price: 170 },
-	];
 	res.json(tours);
+});
+
+app.get('/api/tours/format', function(req, res) {
+	var toursXml = '<?xml version="1.0"?><tours>' +
+		tours.map(function(tour) {
+			return '<tour price="' + tour.price + '" id="' + tour.id + '">' + tour.name + '</tour>';
+		}).join('') + '</tours>';
+	res.format({
+		'application/json': function() {
+			res.json(tours);
+		},
+		'application/xml': function() {
+			res.type('application/xml');
+			res.send(toursXml);
+		},
+		'text/xml': function() {
+			res.type('text/xml');
+			res.send(toursXml);
+		},
+		'text/plain': function() {
+			res.type('text/plain');
+			res.send(toursXml);
+		}
+	});
 });
 
 app.get('/process-contact', function(req, res) {
