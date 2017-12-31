@@ -9,6 +9,7 @@ var session = require('express-session');
 var path = require('path');
 var fortune = require('./libs/fortune');
 // var routes = require('./routes');
+var config = require('./tours');
 
 var handlebars = require('express-handlebars').create({
 	layoutsDir: path.join(__dirname, 'public/views/layouts'),
@@ -78,12 +79,6 @@ app.listen(app.get('port'), function() {
 
 //-----------------------------------------------------
 
-var tours = [
-	{ id: 0, name: 'Prime', price: 100 },
-	{ id: 1, name: 'Fast', price: 170 },
-	{ id: 2, name: 'Slow', price: 100 },
-];
-
 app.get('/', function(req, res, next) {
 	res.render('home');//{ authenticated : false }
 });
@@ -146,7 +141,7 @@ app.get('/test', function(req, res) {
 });
 
 app.put('/api/tour/:id', function(req, res) {
-	var tour = tours.filter(function(tour) {
+	var tour = config.tours.filter(function(tour) {
 		return tour.id === req.params.id;
 	})[0];
 	if(tour) {
@@ -159,23 +154,23 @@ app.put('/api/tour/:id', function(req, res) {
 
 app.put('/api/tour/:id', function(req, res) {
 	var i = -1;
-	for(i=tours.length-1; i>=0; i--) {
-		if(tours[i].id === req.params.id) break;
+	for(i=config.tours.length-1; i>=0; i--) {
+		if(config.tours[i].id === req.params.id) break;
 	}
 	if(i >= 0) {
-		tours.splice(i, 1);
+		config.tours.splice(i, 1);
 		res.json({ success: true });
 	}
 	res.json({ error: 'Tour not found' });
 });
 
 app.get('/api/tours', function(req, res) {
-	res.json(tours);
+	res.json(config.tours);
 });
 
 app.get('/api/tours/format', function(req, res) {
 	var toursXml = '<?xml version="1.0"?><tours>' +
-		tours.map(function(tour) {
+		config.tours.map(function(tour) {
 			return '<tour price="' + tour.price + '" id="' + tour.id + '">' + tour.name + '</tour>';
 		}).join('') + '</tours>';
 	res.format({

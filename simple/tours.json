@@ -1,0 +1,20 @@
+{
+    "currency":
+    {
+        "name": "Dollars",
+        "abbrev": "USD"
+    },
+    "tours":
+    [
+        { "id": "0", "name": "Prime", "price": "100" },
+        { "id": "1", "name": "Fast", "price": "170" },
+        { "id": "2", "name": "Slow", "price": "100" }
+    ],
+    "url": "/january-specials",
+    "currencies":
+    [
+        "USD",
+        "GBP", 
+        "BTC"
+    ]
+}
