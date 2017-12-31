@@ -9,13 +9,21 @@ var session = require('express-session');
 var path = require('path');
 var fortune = require('./libs/fortune');
 // var routes = require('./routes');
-var config = require('./tours');
+var tours = require('./tours');
+var weather = require('./weather');
 
 var handlebars = require('express-handlebars').create({
 	layoutsDir: path.join(__dirname, 'public/views/layouts'),
   	partialsDir: path.join(__dirname, 'public/views/partials'),
   	defaultLayout: 'main',
-  	extname: 'handlebars'
+  	extname: 'handlebars',
+  	helpers: {
+  		section: function(name, options) {
+  			this._sections = this._sections || {};
+  			this._sections[name] = options.fn(this);
+			return null;
+  		}
+  	}
 });
 
 var app = module.exports = express();
@@ -71,6 +79,12 @@ app.use(function(req, res, next) {
 	next();
 	// res.status(200);
 	// res.send('User: ' + req.remoteUser.username);
+});
+
+app.use(function(req, res, next) {
+	res.locals.partials = res.locals.partials || {};
+	res.locals.partials.weatherContext = weather;
+	next();
 });
 
 app.listen(app.get('port'), function() {
@@ -141,7 +155,7 @@ app.get('/test', function(req, res) {
 });
 
 app.put('/api/tour/:id', function(req, res) {
-	var tour = config.tours.filter(function(tour) {
+	var tour = tours.tours.filter(function(tour) {
 		return tour.id === req.params.id;
 	})[0];
 	if(tour) {
@@ -154,23 +168,23 @@ app.put('/api/tour/:id', function(req, res) {
 
 app.put('/api/tour/:id', function(req, res) {
 	var i = -1;
-	for(i=config.tours.length-1; i>=0; i--) {
-		if(config.tours[i].id === req.params.id) break;
+	for(i=tours.tours.length-1; i>=0; i--) {
+		if(tours.tours[i].id === req.params.id) break;
 	}
 	if(i >= 0) {
-		config.tours.splice(i, 1);
+		tours.tours.splice(i, 1);
 		res.json({ success: true });
 	}
 	res.json({ error: 'Tour not found' });
 });
 
 app.get('/api/tours', function(req, res) {
-	res.json(config.tours);
+	res.json(tours.tours);
 });
 
 app.get('/api/tours/format', function(req, res) {
 	var toursXml = '<?xml version="1.0"?><tours>' +
-		config.tours.map(function(tour) {
+		tours.tours.map(function(tour) {
 			return '<tour price="' + tour.price + '" id="' + tour.id + '">' + tour.name + '</tour>';
 		}).join('') + '</tours>';
 	res.format({
@@ -200,6 +214,10 @@ app.get('/process-contact', function(req, res) {
 	} catch(ex) {
 		return res.xhr ? res.json({error: 'DB error'}) : res.redirect(303, '/db-error');
 	}
+});
+
+app.get('/jquery-test', function(req, res) {
+	res.render('jquery-test')
 });
 
 app.get('roadmap', secure, function() {
