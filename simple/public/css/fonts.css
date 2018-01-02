@@ -1,0 +1,57 @@
+/**
+ * AmbleRegular
+ */
+@font-face {
+    font-family: 'AmbleRegular';
+    src: url('../fonts/amble/Amble-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/**
+ * Geometria Light
+ */
+@font-face {
+    font-family: 'GeometriaLight';
+    src: url('../fonts/geometria/geometria-light-webfont.woff2') format('woff2'),
+         url('../fonts/geometria/geometria-light-webfont.woff') format('woff'),
+          url('../fonts/geometria/geometria-light.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/**
+ * Kaushan Script
+ */
+@font-face {
+    font-family: 'KaushanScriptRegular';
+    src: url('../fonts/kaushan-script/KaushanScript-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/**
+ * MuseoSans500
+ */
+@font-face {
+    font-family: 'MuseoSans500';
+    src: url('../fonts/museosans/MuseoSans_500-webfont.woff2') format('woff2'),
+         url('../fonts/museosans/MuseoSans_500-webfont.woff') format('woff'),
+         url('../fonts/museosans/MuseoSans_500.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/**
+ * RobotoRegular
+ */
+@font-face {
+    font-family: 'RobotoRegular';
+    src: url('../fonts/roboto/Roboto-Regular-webfont.eot');
+    src: url('../fonts/roboto/Roboto-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/roboto/Roboto-Regular-webfont.woff') format('woff'),
+         url('../fonts/roboto/Roboto-Regular-webfont.ttf') format('truetype'),
+         url('../fonts/roboto/Roboto-Regular-webfont.svg#robotoregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
