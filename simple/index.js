@@ -235,6 +235,26 @@ app.get('/profile/:username', function(req, res, next) {
 	});
 });
 
+app.get('/newsletter', function(req, res, next) {
+	res.render('newsletter', { csrf: 'token' });
+});
+
+app.get('/accepted', function(req, res, next) {
+	res.render('success');
+});
+
+app.post('/process', function(req, res, next) {
+	if(req.xhr || req.accepts('json.html') === 'json') {
+		res.send({ success: true });
+	} else {
+		console.log('Form: ' + req.query.form);
+		console.log("Token: " + req.body._csrf);
+		console.log("Name: " + req.body.name);
+		console.log("Email: " + req.body.email);
+		res.redirect(303, '/accepted');
+	}
+});
+
 app.get('/search', function(req, res, next) {
 	search(req.query.q, function(err, tweets) {
 		if(err) return next(err);
