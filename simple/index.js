@@ -12,6 +12,8 @@ var fortune = require('./libs/fortune');
 var tours = require('./tours');
 var weather = require('./weather');
 
+var formidable = require('formidable');
+
 var handlebars = require('express-handlebars').create({
 	layoutsDir: path.join(__dirname, 'public/views/layouts'),
   	partialsDir: path.join(__dirname, 'public/views/partials'),
@@ -239,8 +241,13 @@ app.get('/newsletter', function(req, res, next) {
 	res.render('newsletter', { csrf: 'token' });
 });
 
-app.get('/accepted', function(req, res, next) {
+app.get('/success', function(req, res, next) {
 	res.render('success');
+});
+
+app.get('/contest/vacation-photo', function(req, res, next) {
+	var now = new Date();
+	res.render('vacation-photo', { year: now.getFullYear(), month: now.getMonth() });
 });
 
 app.post('/process', function(req, res, next) {
@@ -253,6 +260,16 @@ app.post('/process', function(req, res, next) {
 		console.log("Email: " + req.body.email);
 		res.redirect(303, '/accepted');
 	}
+});
+
+app.post('/contest/vacation-photo/:year/:month', function(req, res, next) {
+	var form = new formidable.IncomingForm();
+	form.parse(req, function(err, fields, files) {
+		if(err) return res.redirect(303, '/error');
+		console.log(fields);
+		console.log(files);
+		res.redirect(303, '/success');
+	});
 });
 
 app.get('/search', function(req, res, next) {
