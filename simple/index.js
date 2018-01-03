@@ -4,6 +4,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
+// var favicon = require('favicon');
 var methodOverride = require('method-override');
 var session = require('express-session');
 var path = require('path');
@@ -11,9 +12,7 @@ var fortune = require('./libs/fortune');
 // var routes = require('./routes');
 var tours = require('./tours');
 var weather = require('./weather');
-
 var formidable = require('formidable');
-
 var handlebars = require('express-handlebars').create({
 	layoutsDir: path.join(__dirname, 'public/views/layouts'),
   	partialsDir: path.join(__dirname, 'public/views/partials'),
@@ -27,6 +26,12 @@ var handlebars = require('express-handlebars').create({
   		}
   	}
 });
+var jqupload = require('jquery-file-upload-middleware');
+
+// configuration
+var resizeVersion = require('./config').resizeVersion;
+var dirs = require('./config').dirs;
+//-----------------------------------------
 
 var app = module.exports = express();
 app.engine('handlebars', handlebars.engine);
@@ -40,9 +45,11 @@ app.use('/css', express.static(__dirname + '/public/css', { maxAge: 100000000000
 app.use('/resources', express.static(__dirname + '/public/resources', { hidden: true }));
 //app.use('/blog', require('./blog'));
 
+//app.use(favicon());
+// app.use('/upload', jqupload.fileHandler());
 app.use(bodyParser.urlencoded({ 'extended':'true' }));
 app.use(bodyParser.json());
-app.use(cookieParser());
+app.use(cookieParser('token'));
 app.use(session({ secret:'passport', resave: true, saveUninitialized: true }));
 
 app.set('vendor', path.join(__dirname, '/public/vendor'));
@@ -61,9 +68,11 @@ app.set(methodOverride());
 app.use('production', function() {
 	app.enable('view cache');
 	app.disable('x-powered-by');
+	app.use(express.errorHandler());
 });
 app.use('development', function() {
 	app.disable('view cache');
+	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 // app.error(function(err, req, res, next) {
 // 	if('Bad response' == err.message) {
@@ -77,7 +86,7 @@ app.use('development', function() {
 // });
 
 app.use(function(req, res, next) {
-	res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
+	res.locals.showTests = (app.get('env') !== 'production' && req.query.test === '1');
 	next();
 	// res.status(200);
 	// res.send('User: ' + req.remoteUser.username);
@@ -89,8 +98,235 @@ app.use(function(req, res, next) {
 	next();
 });
 
+app.get('/upload*', function(req, res, next) {
+	res.redirect('/');
+});
+
+app.put('/upload*', function( req, res ){
+	res.redirect('/');
+});
+
+app.delete('/upload*', function( req, res ){
+	res.redirect('/');
+});
+
+//http://localhost:3000/uploads/1515003855854/0ce3e242352582b6a1d3c550c40_prev.jpg
+app.use('/upload', function(req, res, next) {
+	var dir = JSON.stringify(Date.now());
+	jqupload.fileHandler({
+		tmpDir: dirs.temp,
+		uploadDir: function() {
+			return path.join(__dirname, dirs.base, dir);
+		},
+		uploadUrl: function() {
+			return path.join(dirs.baseUrl, dir);
+		},
+		targetDir: this.uploadDir,
+	    targetUrl: this.uploadUrl,
+	    ssl: false,
+	    hostname: null,
+		imageVersions: resizeVersion.base,
+        maxPostSize: 1000 * 1000 * 1000,
+	    minFileSize: 1,
+	    maxFileSize: 1000 * 1000 * 1000,
+	    acceptFileTypes: /.+/i,
+	    imageTypes: /\.(gif|jpe?g|png)$/i,
+	    imageArgs: ['-auto-orient'],
+	    accessControl: {
+	        allowOrigin: '*',
+	        allowMethods: 'POST, PUT, DELETE'
+	    },
+	})(req, res, next);
+});
+
+app.use('/upload/list', function(req, res, next) {
+    jqupload.fileManager({
+        uploadDir: function () {
+            return path.join(__dirname, dirs.base);
+        },
+        uploadUrl: function () {
+            return dirs.baseUrl;
+        }
+    }).getFiles(function (files) {
+        res.json(files);
+    });
+});
+
+// app.use('/upload/location', function(req, res, next) {
+// 	jqupload.fileHandler({
+// 		uploadDir: function () {
+// 			return path.join(__dirname, dirs.location, req.sessionID);
+//         },
+//         uploadUrl: function () {
+//         	return path.join(dirs.locationUrl, req.sessionID);
+//         },
+//         imageVersions: resizeVersion.location
+// 	})(req, res, next);
+// });
+
+// app.use('/upload/location/list', function(req, res, next) {
+//     jqupload.fileManager({
+//         uploadDir: function () {
+//             return path.join(__dirname, dirs.location);
+//         },
+//         uploadUrl: function () {
+//             return dirs.locationUrl;
+//         }
+//     }).getFiles(function (files) {
+//         res.json(files);
+//     });
+// });
+
+// app.use('/upload/location', function(req, res, next) {
+// 	jqupload.fileHandler({
+// 	    tmpDir: dirs.temp,
+// 	    uploadDir: function() {
+// 			return path.join(__dirname, dirs.location);
+// 		},
+// 		uploadUrl: function() {
+// 			return dirs.locationUrl;
+// 		},
+// 	    imageVersions: resizeVersion.location
+// 	});
+// });
+
+// app.use('/upload/location/list', function(req, res, next) {
+//     jqupload.fileManager({
+//         uploadDir: function () {
+//             return path.join(__dirname, dirs.location);
+//         },
+//         uploadUrl: function () {
+//             return dirs.locationUrl;
+//         }
+//     }).getFiles(function (files) {
+//         res.json(files);
+//     });
+// });
+
+// Moving uploaded files to different dir:
+
+//         app.use('/api', function (req, res, next) {
+//             req.filemanager = upload.fileManager();
+//             next();
+//         });
+
+//         app.use('/api/endpoint', function (req, res, next) {
+//             // your real /api handler that will actually move the file
+//             ...
+//             // req.filemanager.move(filename, path, function (err, result))
+//             req.filemanager.move('SomeFile.jpg', 'project1', function (err, result) {
+//                 // SomeFile.jpg gets moved from uploadDir/SomeFile.jpg to
+//                 // uploadDir/project1/SomeFile.jpg
+//                 // if path is relative (no leading slash), uploadUrl will
+//                 // be used to generate relevant urls,
+//                 // for absolute paths urls are not generated
+//                 if (!err) {
+//                     // result structure
+//                     // {
+//                     //     filename: 'SomeFile.jpg',
+//                     //     url: '/uploads/project1/SomeFile.jpg',
+//                     //     thumbail_url : '/uploads/project1/thumbnail/SomeFile.jpg'
+//                     // }
+//                     ...
+//                 } else {
+//                     console.log(err);
+//                 }
+//             });
+//         });
+
+
+// Moving uploaded files out of uploadDir:
+
+
+//         app.use('/api', function (req, res, next) {
+//             var user = db.find(...);
+
+//             req.filemanager = upload.fileManager({
+//                 targetDir: __dirname + '/public/u/' + user._id,
+//                 targetUrl: '/u/' + user._id,
+//             });
+
+//             // or
+//             req.filemanager = upload.fileManager({
+//                 targetDir: function () {
+//                     return __dirname + '/public/u/' + user._id
+//                 },
+//                 targetUrl: function () {
+//                     return'/u/' + user._id
+//                 }
+//             });
+//             ...
+//             req.filemanager.move(req.body.filename, 'profile', function (err, result) {
+//                 // file gets moved to __dirname + '/public/u/' + user._id + '/profile'
+//                 if (!err) {
+
+//                 }
+//             });
+//         });
+
+
+// Getting uploaded files mapped to their fs locations:
+
+
+//         app.use('/list', function (req, res, next) {
+//             upload.fileManager().getFiles(function (files) {
+//                 //  {
+//                 //      "00001.MTS": {
+//                 //          "path": "/home/.../public/uploads/ekE6k4j9PyrGtcg+SA6a5za3/00001.MTS"
+//                 //      },
+//                 //      "DSC00030.JPG": {
+//                 //          "path": "/home/.../public/uploads/ekE6k4j9PyrGtcg+SA6a5za3/DSC00030.JPG",
+//                 //          "thumbnail": "/home/.../public/uploads/ekE6k4j9PyrGtcg+SA6a5za3/thumbnail/DSC00030.JPG"
+//                 //      }
+//                 //  }
+//                 res.json(files);
+//             });
+//         });
+
+//         // with dynamic upload directories
+
+//         app.use('/list', function (req, res, next) {
+//             upload.fileManager({
+//                 uploadDir: function () {
+//                     return __dirname + '/public/uploads/' + req.sessionID
+//                 },
+//                 uploadUrl: function () {
+//                     return '/uploads/' + req.sessionID
+//                 }
+//             }).getFiles(function (files) {
+//                 res.json(files);
+//             });
+//         });
+
+
 app.listen(app.get('port'), function() {
 	console.log('\033[96m + \033[39m app is listening on *:' + app.get('port'));
+});
+
+//-----------------------------------------------------
+
+// jqupload.configure({
+//     uploadDir: __dirname + '/public/uploads/',
+//     uploadUrl: '/uploads'
+// });
+
+jqupload.on('end', function (fileInfo) {
+    console.log("files upload complete");
+    console.log(fileInfo);
+});
+
+jqupload.on('delete', function (fileName) {
+    console.log("files remove complete");
+    console.log(fileName);
+});
+
+jqupload.on('error', function (err) {
+	console.log("files error");
+    console.log(err.message);
+});
+
+jqupload.on('abort', function (fileInfo, req, res) {
+	console.log("files abort");
 });
 
 //-----------------------------------------------------
@@ -231,14 +467,24 @@ app.get('/profile/:username', function(req, res, next) {
 		if(err) return next(err);
 		if(exists) {
 			res.render('profile');
-		} else {
-			next();
 		}
+		next();
 	});
 });
 
 app.get('/newsletter', function(req, res, next) {
 	res.render('newsletter', { csrf: 'token' });
+});
+
+app.post('/process', function(req, res, next) {
+	if(req.xhr || req.accepts('json.html') === 'json') {
+		res.send({ success: true });
+	}
+	console.log('Form: ' + req.query.form);
+	console.log("Token: " + req.body._csrf);
+	console.log("Name: " + req.body.name);
+	console.log("Email: " + req.body.email);
+	res.redirect(303, '/success');
 });
 
 app.get('/success', function(req, res, next) {
@@ -248,18 +494,6 @@ app.get('/success', function(req, res, next) {
 app.get('/contest/vacation-photo', function(req, res, next) {
 	var now = new Date();
 	res.render('vacation-photo', { year: now.getFullYear(), month: now.getMonth() });
-});
-
-app.post('/process', function(req, res, next) {
-	if(req.xhr || req.accepts('json.html') === 'json') {
-		res.send({ success: true });
-	} else {
-		console.log('Form: ' + req.query.form);
-		console.log("Token: " + req.body._csrf);
-		console.log("Name: " + req.body.name);
-		console.log("Email: " + req.body.email);
-		res.redirect(303, '/accepted');
-	}
 });
 
 app.post('/contest/vacation-photo/:year/:month', function(req, res, next) {
@@ -279,11 +513,25 @@ app.get('/search', function(req, res, next) {
 	});
 });
 
+app.get('/location/input', function (req, res) {
+    var params = {
+        title: "jquery file upload example"
+    };
+    res.render('form', params);
+});
+
+app.post('/location/input', function (req, res) {
+    console.log('\n===============================================\n');
+    console.log(req.body);
+    res.send(req.body);
+});
+
 //-----------------------------------------------------
 
 app.use(function(req, res) {
 	res.status(404).render('404', { status: 404, fortune: fortune.getFortune() });
 });
+
 app.use(function(err, req, res, next) {
 	console.log(err);
 	res.status(500).render('500', { status: 500 });

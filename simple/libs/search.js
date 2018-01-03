@@ -9,7 +9,7 @@ var request = require('superagent');
  * @param {Function} callback
  * @api public
  */
- module.exports = function search(url, query, fn) {
+module.exports.search = function(url, query, fn) {
  	request.get(url || 'http://search.twitter.com/search.json')
  			.send({ q: query })
  			.set('Date', new Date())
@@ -19,8 +19,8 @@ var request = require('superagent');
  				}
  				fn(new Error("Bad response"));
  			});
- };
- // module.exports.get = {};
- // module.exports.get.home = function(req, res, next) {};
- // module.exports.post = {};
- // module.exports.post.create = function(req, res, next) {};
+};
+// module.exports.get = {};
+// module.exports.get.home = function(req, res, next) {};
+// module.exports.post = {};
+// module.exports.post.create = function(req, res, next) {};

@@ -1,12 +1,12 @@
 {{#section 'head'}}
-<link href='http://fonts.googleapis.com/css?family=Oswald:700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href='http://fonts.googleapis.com/css?family=Oswald:700' />
 {{/section}}
 
 <form class="form-horizontal" role="form" enctype="multipart/form-data" method="POST" action="/contest/vacation-photo/{year}/{month}">
 	<div class="form-group">
 		<label for="fieldName" class="col-sm-2 control-label">Name</label>
 		<div class="col-sm-4">
-			<input type="text" class="form-control" id="fieldName" name="name" />
+			<input type="text" class="form-control" required id="fieldName" name="name" />
 			</div>
 		</div>
 	</div>
@@ -19,7 +19,11 @@
 	<div class="form-group">
 		<label for="fieldPhoto" class="col-sm-2 control-label">Photo</label>
 		<div class="col-sm-4">
-			<input type="file" class="form-control" required accept="image/*" id="fiedlPhoto" name="photo" />
+			<span class="btn btn-default btn-file">
+				Load files
+				<input type="file" class="form-control" required accept="image/*" id="fieldPhoto" data-url="/upload" multiple name="photo" />
+			</span>
+			<div id="fileUploads"></div>
 		</div>
 	</div>
 	<div class="form-group">
@@ -27,4 +31,37 @@
 			<button type="submit" class="btn btn-primary">Send</button>
 		</div>
 	</div>
+	<div class="form-group">
+		<div class="col-sm-offset-2 col-sm-4">
+			<button type="reset" class="btn btn-primary">Cancel</button>
+		</div>
+	</div>
 </form>
+
+{{#section 'jquery'}}
+	<script src="//code.jquery.com/jquery-2.0.2.min.js" type="text/javascript" charset="utf-8"></script>
+
+	<script src="//blueimp.github.io/JavaScript-Load-Image/js/load-image.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/JavaScript-Canvas-to-Blob/js/canvas-to-blob.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.iframe-transport.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload-process.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload-image.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload-audio.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload-video.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload-validate.js" type="text/javascript" charset="utf-8"></script>
+	<script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload-ui.js" type="text/javascript" charset="utf-8"></script>
+
+	<script type="text/javascript">
+		$('document').ready(function() {
+			$('#fieldPhoto').fileupload({
+				dataType: 'json',
+				done: function(ev, data) {
+					$.each(data.result.files, function(index, file) {
+						$('#fileUploads').append($('<div class="upload">' + '<span class="glyphicon glyphicon-ok"></span>' + '&nbsp;' + file.originalName + '</div>'));
+					});
+				}
+			});
+		});
+	</script>
+{{/section}}
