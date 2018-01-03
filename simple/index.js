@@ -29,8 +29,9 @@ var handlebars = require('express-handlebars').create({
 var jqupload = require('jquery-file-upload-middleware');
 
 // configuration
-var resizeVersion = require('./config').resizeVersion;
-var dirs = require('./config').dirs;
+var credentials = require('./credentials.js');
+var resizeVersion = require('./config.js').resizeVersion;
+var dirs = require('./config.js').dirs;
 //-----------------------------------------
 
 var app = module.exports = express();
@@ -49,7 +50,7 @@ app.use('/resources', express.static(__dirname + '/public/resources', { hidden: 
 // app.use('/upload', jqupload.fileHandler());
 app.use(bodyParser.urlencoded({ 'extended':'true' }));
 app.use(bodyParser.json());
-app.use(cookieParser('token'));
+app.use(cookieParser(credentials.cookieSecret));
 app.use(session({ secret:'passport', resave: true, saveUninitialized: true }));
 
 app.set('vendor', path.join(__dirname, '/public/vendor'));
@@ -493,6 +494,7 @@ app.get('/success', function(req, res, next) {
 
 app.get('/contest/vacation-photo', function(req, res, next) {
 	var now = new Date();
+	res.cookie('signed_upload', 'signed', { signed: true });
 	res.render('vacation-photo', { year: now.getFullYear(), month: now.getMonth() });
 });
 
