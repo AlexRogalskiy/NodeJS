@@ -5,6 +5,7 @@
 	"private": "true",
 	"description": "A simple Mongoose showcase",
 	"dependencies": {
+		"app-reset": "1.0.2",
 		"cookie-parser": "1.4.3",
 		"express": "4.16.2",
 		"express-handlebars": "3.0.0",
