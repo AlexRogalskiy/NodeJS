@@ -19,6 +19,10 @@ module.exports =
         location: '/logs',
         rotation: '1d',
     },
+    email:
+    {
+        location: '/public/email',
+    },
     js:
     {
         url: '/js',

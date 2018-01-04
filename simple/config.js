@@ -5,65 +5,79 @@ module.exports.resizeVersion =
 {
     base:
     {
-        thumbnail: {
+        thumbnail:
+        {
             width: 100,
             height: "100!"
         },
-        small: {
+        small:
+        {
             width:200,
             height:"150!"
         },
-        medium:{
+        medium:
+        {
             width:400,
             height:300
         },
-        large: {
+        large:
+        {
             width: 800,
             height: 600
         }
     },
     default:
     {
-        thumbnail:{
+        thumbnail:
+        {
             width:80,
             height:"80!"
         },
-        small: {
+        small:
+        {
             width:200,
             height:"150!"
         },
-        medium:{
+        medium:
+        {
             width:400,
             height:300
         },
-        large: {
+        large:
+        {
             width: 800,
             height: 600
         }
     },
     location :
     {
-        thumbnail:{
+        thumbnail:
+        {
             width:80,
             height:"80^",
-            imageArgs: [
+            imageArgs:
+            [
                 "-gravity", "center",
                 "-extent", "80x80"
             ]
         },
-        small: {
+        small:
+        {
             width:"200",
             height:"150^",
-            imageArgs: [
+            imageArgs:
+            [
                 "-gravity", "center",
                 "-extent", "200x150"
             ]
         },
-        medium:{
+        medium:
+        {
             width:400,
             height:300
         },
-        large: {
+        large:
+        {
             width: 800,
             height: 600
         }

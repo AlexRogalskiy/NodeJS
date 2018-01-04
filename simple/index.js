@@ -20,6 +20,17 @@ var favicon = require('serve-favicon');
 
 var fortune = require('./libs/fortune');
 var cartValidation = require('./libs/cartValidation');
+var mailer = require('./libs/mailer');
+mailer.send({
+	to: 'rogalsky.alexander@gmail.com',
+	subject: 'Nodemailer is unicode friendly ✔',
+	text: 'Hello to myself!',
+	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
+	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
+	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
+	attachments: [],
+	headers: {},
+});
 
 // var routes = require('./routes');
 var tours = require('./tours');
@@ -700,3 +711,5 @@ function createApiRouter() {
 //   if (!req.body) return res.sendStatus(400);
 //   // create user in req.body
 // });
+
+//--------------------------------------------------
