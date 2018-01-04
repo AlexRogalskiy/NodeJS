@@ -1,22 +1,35 @@
 /**
  * Module dependencies
  */
+// configuration
+var appConfig = require('./app.config');
+var credentials = require('./credentials');
+var resizeVersion = require('./config').resizeVersion;
+var dirs = require('./config.js').dirs;
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-// var favicon = require('favicon');
 var methodOverride = require('method-override');
 var session = require('express-session');
 var path = require('path');
+var compression = require('compression');
+var csurf = require('csurf');
+var errorHandler = require('errorHandler');
+var favicon = require('serve-favicon');
+
 var fortune = require('./libs/fortune');
+var cartValidation = require('./libs/cartValidation');
+
 // var routes = require('./routes');
 var tours = require('./tours');
 var weather = require('./weather');
+
 var formidable = require('formidable');
 var handlebars = require('express-handlebars').create({
-	layoutsDir: path.join(__dirname, 'public/views/layouts'),
-  	partialsDir: path.join(__dirname, 'public/views/partials'),
-  	defaultLayout: 'main',
+	layoutsDir: path.join(__dirname, appConfig.layout.layoutsDir),
+  	partialsDir: path.join(__dirname, appConfig.layout.partialsDir),
+  	defaultLayout: appConfig.layout.defaultLayout,
   	extname: 'handlebars',
   	helpers: {
   		section: function(name, options) {
@@ -26,55 +39,84 @@ var handlebars = require('express-handlebars').create({
   		}
   	}
 });
+
 var jqupload = require('jquery-file-upload-middleware');
 
-// configuration
-var credentials = require('./credentials.js');
-var resizeVersion = require('./config.js').resizeVersion;
-var dirs = require('./config.js').dirs;
+var morgan = require('morgan');
+var fs = require('fs');
+var rfs = require('rotating-file-stream');
+
+var logDirectory = path.join(__dirname, appConfig.log.location);
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
+var accessLogStream = rfs(appConfig.log.fileName, {
+	interval: appConfig.log.rotation,
+	path: logDirectory
+});
+
+var responseTime = require('response-time');
+// var vhost = require('vhost');
+
 //-----------------------------------------
 
 var app = module.exports = express();
 app.engine('handlebars', handlebars.engine);
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/vendor', express.static(__dirname + '/public/vendor'));
-app.use('/images', express.static(__dirname + '/public/images'));
-app.use('/views', express.static(__dirname + '/public/views'));
-app.use('/js', express.static(__dirname + '/public/js', { maxAge: 10000000000000 }));
-app.use('/css', express.static(__dirname + '/public/css', { maxAge: 10000000000000 }));
-app.use('/resources', express.static(__dirname + '/public/resources', { hidden: true }));
-//app.use('/blog', require('./blog'));
-
-//app.use(favicon());
-// app.use('/upload', jqupload.fileHandler());
-app.use(bodyParser.urlencoded({ 'extended':'true' }));
-app.use(bodyParser.json());
-app.use(cookieParser(credentials.cookieSecret));
-app.use(session({ secret:'passport', resave: true, saveUninitialized: true }));
-
-app.set('vendor', path.join(__dirname, '/public/vendor'));
-app.set('views', path.join(__dirname, '/public/views'));
-app.set('js', path.join(__dirname + '/public/js'));
-app.set('css', path.join(__dirname + '/public/css'));
-app.set('images', path.join(__dirname + '/public/images'));
-app.set('resources', path.join(__dirname + '/public/resources'));
-app.set('view engine', 'handlebars');
-app.set('view options', { layout: false });
-app.set('view cache', false);
-app.set('port', process.env.PORT || 3000);
-app.set(methodOverride());
-
+var sess =
+{
+	secret: credentials.session.key,
+	resave: false,
+	saveUninitialized: false,
+	key: 'id',
+	cookie: { secure: false, httpOnly: true, signed: true, maxAge: credentials.session.maxAge },
+};
 // //$NODE_ENV=production node server
 app.use('production', function() {
 	app.enable('view cache');
 	app.disable('x-powered-by');
-	app.use(express.errorHandler());
+	// app.use(errorHandler());
+	app.set('trust proxy', 1);
+	sess.cookie.secure = true;
 });
 app.use('development', function() {
 	app.disable('view cache');
-	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+	app.use(errorHandler({ dumpExceptions: true, showStack: true }));
 });
+
+app.use(express.static(path.join(__dirname, appConfig.default.location)));
+app.use(appConfig.vendor.url, express.static(__dirname + appConfig.vendor.location));
+app.use(appConfig.images.url, express.static(__dirname + appConfig.images.location));
+app.use(appConfig.views.url, express.static(__dirname + appConfig.views.location));
+app.use(appConfig.js.url, express.static(__dirname + appConfig.js.location, { maxAge: appConfig.js.maxAge }));
+app.use(appConfig.css.url, express.static(__dirname + appConfig.css.location, { maxAge: appConfig.css.maxAge }));
+app.use(appConfig.resources.url, express.static(__dirname + appConfig.resources.location, { hidden: true }));
+app.use(favicon(path.join(__dirname, appConfig.icons.location, appConfig.icons.url)));
+
+app.use(responseTime());
+app.use(compression({filter: shouldCompress}));
+// app.use('/upload', jqupload.fileHandler());
+app.use(bodyParser.urlencoded({ 'extended': 'true' }));
+app.use(bodyParser.json());
+app.use(cookieParser(credentials.cookie.key));
+app.use(session(sess));
+app.use(csurf({ cookie: false }));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+
+app.use(methodOverride('X-HTTP-Method')); // Microsoft
+app.use(methodOverride('X-HTTP-Method-Override')); // Google/GData
+app.use(methodOverride('X-Method-Override')); // IBM
+app.use(morgan('combined', { stream: accessLogStream }));
+
+app.set('vendor', path.join(__dirname, appConfig.vendor.location));
+app.set('views', path.join(__dirname, appConfig.views.location));
+app.set('js', path.join(__dirname + appConfig.js.location));
+app.set('css', path.join(__dirname + appConfig.css.location));
+app.set('images', path.join(__dirname + appConfig.images.location));
+app.set('resources', path.join(__dirname + appConfig.resources.location));
+app.set('view engine', 'handlebars');
+app.set('view options', { layout: false });
+// app.set('view cache', false);
+app.set('port', process.env.PORT || 3000);
+
 // app.error(function(err, req, res, next) {
 // 	if('Bad response' == err.message) {
 // 		res.render('error');
@@ -92,25 +134,32 @@ app.use(function(req, res, next) {
 	// res.status(200);
 	// res.send('User: ' + req.remoteUser.username);
 });
-
 app.use(function(req, res, next) {
 	res.locals.partials = res.locals.partials || {};
 	res.locals.partials.weatherContext = weather;
 	next();
 });
+app.use(function(req, res, next) {
+	res.locals.flash = req.session.flash;
+	delete req.session.flash;
+	next();
+});
+
+//app.use('/blog', require('./blog'));
+app.use(cartValidation.checkWaivers);
+app.use(cartValidation.checkGuestCounts);
+
+//--------------------------------------------
 
 app.get('/upload*', function(req, res, next) {
 	res.redirect('/');
 });
-
 app.put('/upload*', function( req, res ){
 	res.redirect('/');
 });
-
 app.delete('/upload*', function( req, res ){
 	res.redirect('/');
 });
-
 //http://localhost:3000/uploads/1515003855854/0ce3e242352582b6a1d3c550c40_prev.jpg
 app.use('/upload', function(req, res, next) {
 	var dir = JSON.stringify(Date.now());
@@ -299,7 +348,6 @@ app.use('/upload/list', function(req, res, next) {
 //             });
 //         });
 
-
 app.listen(app.get('port'), function() {
 	console.log('\033[96m + \033[39m app is listening on *:' + app.get('port'));
 });
@@ -310,22 +358,18 @@ app.listen(app.get('port'), function() {
 //     uploadDir: __dirname + '/public/uploads/',
 //     uploadUrl: '/uploads'
 // });
-
 jqupload.on('end', function (fileInfo) {
     console.log("files upload complete");
     console.log(fileInfo);
 });
-
 jqupload.on('delete', function (fileName) {
     console.log("files remove complete");
     console.log(fileName);
 });
-
 jqupload.on('error', function (err) {
 	console.log("files error");
     console.log(err.message);
 });
-
 jqupload.on('abort', function (fileInfo, req, res) {
 	console.log("files abort");
 });
@@ -372,7 +416,8 @@ app.get('/tours/price-group-rate', function(req, res) {
 });
 
 app.get('/greeting', function(req, res) {
-	res.render('about', {
+	res.render('about',
+	{
 		message: 'welcome',
 		style: req.query.style,
 		userid: req.cookie.userid,
@@ -474,7 +519,11 @@ app.get('/profile/:username', function(req, res, next) {
 });
 
 app.get('/newsletter', function(req, res, next) {
-	res.render('newsletter', { csrf: 'token' });
+	res.render('newsletter', { csrf: req.csrfToken() });
+});
+
+app.get('/newsletter/archive', function(req, res, next) {
+	res.render('newsletter', { csrf: req.csrfToken() });
 });
 
 app.post('/process', function(req, res, next) {
@@ -494,7 +543,8 @@ app.get('/success', function(req, res, next) {
 
 app.get('/contest/vacation-photo', function(req, res, next) {
 	var now = new Date();
-	res.cookie('signed_upload', 'signed', { signed: true });
+	res.setHeader('Cache-Control', 'no-cache');
+	res.cookie('signed_upload', 'signed', { secure: false, httpOnly: true, signed: true });
 	res.render('vacation-photo', { year: now.getFullYear(), month: now.getMonth() });
 });
 
@@ -528,14 +578,54 @@ app.post('/location/input', function (req, res) {
     res.send(req.body);
 });
 
+app.post('/newsletter', function(req, res) {
+	var name = req.body.name || '';
+	var email = req.body.email || '';
+	if(!validateEmail(email)) {
+		if(req.xhr) {
+			return res.json({ error: 'Invalid email address' });
+		}
+		res.locals.flash =
+		{//req.session.flash
+			type: 'danger',
+			title: 'Validation error',
+			message: 'Invalid email address',
+		};
+		return res.redirect(303, '/newsletter/archive');
+	}
+	//new NewsLetterSignup({name: data.name, email: data.email}).save(function(err) {
+		var err = 0;
+		if(err) {
+			if(req.xhr) return res.json({ error: "DB error" });
+			res.locals.flash =
+			{//req.session.flash
+				type: 'danger',
+				title: 'DB ERROR',
+				message: 'Database is not available',
+			}
+			return res.redirect(303, '/newsletter/archive');
+		}
+		if(req.xhr) return res.json({ success: true });
+		res.locals.flash =
+		{//req.session.flash
+			type: 'success',
+			title: 'Confirmation',
+			message: 'You have been successfully subscribed for the newsLetter',
+		}
+		//return res.redirect(303, '/newsletter/archive');
+		res.render('newsletter', { csrf: req.csrfToken() });
+	//});
+	//saveNewsLetterSubscription({ name: name, email: email });
+});
+
 //-----------------------------------------------------
 
 app.use(function(req, res) {
 	res.status(404).render('404', { status: 404, fortune: fortune.getFortune() });
 });
-
 app.use(function(err, req, res, next) {
 	console.log(err);
+	if (err.code !== 'EBADCSRFTOKEN') return next(err);
 	res.status(500).render('500', { status: 500 });
 });
 
@@ -547,7 +637,28 @@ function secure(req, res, next) {
 		//return next('route');
 	}
 	next();
-}
+};
+function validateEmail(email) {
+	var re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+	return re.test(email.toLowerCase());
+};
+function shouldCompress(req, res) {
+	if (req.headers['x-no-compression']) {
+		return false
+	}
+	return compression.filter(req, res)
+};
+// create api router 
+// var api = createApiRouter();
+// // mount api before csrf is appended to the app stack 
+// app.use('/api', api);
+function createApiRouter() {
+	var router = new express.Router();
+	router.post('/getProfile', function(req, res) {
+		res.send('no csrf to get here');
+	});
+	return router;
+};
 //var fs = require('fs');
 //serverStatic(res, '/public/about.html', 'text/html')
 //serverStatic(res, '/public/img/logo.jpg', 'image/jpeg')
@@ -572,3 +683,20 @@ function secure(req, res, next) {
 //res.format({ 'text/plain': '', 'text/html': '<b></b>' });
 //res.sendFile(path, options, callback);
 //res.render(view, locals, callback);
+
+//-----------------------------------------------
+
+// // create application/json parser
+// var jsonParser = bodyParser.json();
+// // create application/x-www-form-urlencoded parser
+// var urlencodedParser = bodyParser.urlencoded({ extended: false });
+// // POST /login gets urlencoded bodies
+// app.post('/login', urlencodedParser, function (req, res) {
+//   if (!req.body) return res.sendStatus(400);
+//   res.send('welcome, ' + req.body.username);
+// });
+// // POST /api/users gets JSON bodies
+// app.post('/api/users', jsonParser, function (req, res) {
+//   if (!req.body) return res.sendStatus(400);
+//   // create user in req.body
+// });

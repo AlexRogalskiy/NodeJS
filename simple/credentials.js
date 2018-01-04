@@ -2,5 +2,13 @@
  * Credential properties
  */
 module.exports = {
-	cookieSecret: 'secret',
-}
+	cookie:
+	{
+		key: 'cookieSecret',
+	},
+	session:
+	{
+		key: 'sessionSecret',
+		maxAge: 60000000,
+	},
+};
