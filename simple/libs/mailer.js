@@ -74,7 +74,7 @@ module.exports.send = function(data) {
 	        text: data.text,
 	        html: data.html,
 	        generateTextFromHtml: data.generateTextFromHtml || false,
-	        attachments: //data.attachments ||
+	        attachments: data.attachments ||
 	        [
 	            {
 	                filename: 'notes.txt',

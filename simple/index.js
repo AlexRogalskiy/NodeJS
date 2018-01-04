@@ -28,8 +28,6 @@ mailer.send({
 	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
 	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
 	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
-	attachments: [],
-	headers: {},
 });
 
 // var routes = require('./routes');
