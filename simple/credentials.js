@@ -15,6 +15,8 @@ module.exports =
 	},
 	mail:
 	{
+		template: 'pwreminder.html',
+		errorTo: '"AR" <alexander.rogalsky@yandex.ru',
 		smtp:
 		{
 			from: '"AR" <alexander.rogalsky@yandex.ru',
@@ -30,12 +32,13 @@ module.exports =
 		},
 		poolConfig:
 		{
+			pool: true,
 			from: '"AR" <alexander.rogalsky@yandex.ru',
-		    pool: true,
 		    host: 'smtp.yandex.ru',
 		    port: 465,
 		    secure: true,
-		    auth: {
+		    auth:
+		    {
 		        user: 'user@gmail.com',
 		        pass: 'pass',
 		    },

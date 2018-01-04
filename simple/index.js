@@ -20,15 +20,16 @@ var favicon = require('serve-favicon');
 
 var fortune = require('./libs/fortune');
 var cartValidation = require('./libs/cartValidation');
-var mailer = require('./libs/mailer');
-mailer.send({
-	to: 'rogalsky.alexander@gmail.com',
-	subject: 'Nodemailer is unicode friendly ✔',
-	text: 'Hello to myself!',
-	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
-	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
-	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
-});
+
+var mailer = require('./libs/mailer')(credentials);
+// mailer.send({
+// 	to: 'rogalsky.alexander@gmail.com',
+// 	subject: 'Nodemailer is unicode friendly ✔',
+// 	text: 'Hello to myself!',
+// 	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
+// 	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
+// 	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
+// });
 
 // var routes = require('./routes');
 var tours = require('./tours');
@@ -625,6 +626,31 @@ app.post('/newsletter', function(req, res) {
 		res.render('newsletter', { csrf: req.csrfToken() });
 	//});
 	//saveNewsLetterSubscription({ name: name, email: email });
+});
+
+app.post('/cart/checkout', function(req, res, next) {
+	var cart = req.session.cart;
+	if(!cart) next(new Error("Cart is empty"));
+	var name = req.body.name || '';
+	var email = req.body.email || '';
+	if(!validateEmail(email)) {
+		return res.next(new Error("Incorrect email address: " + email));
+	}
+	cart.number = Math.random().toString().replace(/^0\.0*/, '');
+	cart.billing = {
+		name: name,
+		email: email,
+	};
+	res.render('email/cart-success', { layout: 'email', cart: cart }, function(err, html) {
+		if(err) console.log("Template error");
+		mailer.send({
+			to: cart.billing.email,
+			subject: '✔ Confirmation order request',
+			html: html,
+			generateTextFromHtml: true,
+		});
+	});
+	res.render('cart-success', {  cart: cart });
 });
 
 //-----------------------------------------------------
