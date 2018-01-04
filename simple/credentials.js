@@ -23,8 +23,8 @@ module.exports =
 		    secure: true,
 		    auth:
 		    {
-		        user: 'alexander.rogalsky@yandex.ru',
-		        pass: 'F@hRe!n#e!t$)',
+		        user: 'user@gmail.com',
+		        pass: 'pass',
 		    },
 		    //proxy: 'http://localhost:3128/',
 		},
