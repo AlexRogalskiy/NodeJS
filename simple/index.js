@@ -22,14 +22,14 @@ var fortune = require('./libs/fortune');
 var cartValidation = require('./libs/cartValidation');
 
 var mailer = require('./libs/mailer')(credentials);
-// mailer.send({
-// 	to: 'rogalsky.alexander@gmail.com',
-// 	subject: 'Nodemailer is unicode friendly ✔',
-// 	text: 'Hello to myself!',
-// 	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
-// 	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
-// 	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
-// });
+mailer.send({
+	to: 'rogalsky.alexander@gmail.com',
+	subject: 'Nodemailer is unicode friendly ✔',
+	text: 'Hello to myself!',
+	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
+	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
+	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
+});
 
 // var routes = require('./routes');
 var tours = require('./tours');
@@ -126,6 +126,7 @@ app.set('view engine', 'handlebars');
 app.set('view options', { layout: false });
 // app.set('view cache', false);
 app.set('port', process.env.PORT || 3000);
+app.set('host', process.env.HOST || 'http://localhost/');
 
 // app.error(function(err, req, res, next) {
 // 	if('Bad response' == err.message) {
@@ -161,13 +162,13 @@ app.use(cartValidation.checkGuestCounts);
 
 //--------------------------------------------
 
-app.get('/upload*', function(req, res, next) {
+app.get('/upload', function(req, res, next) {
 	res.redirect('/');
 });
-app.put('/upload*', function( req, res ){
+app.put('/upload', function( req, res ){
 	res.redirect('/');
 });
-app.delete('/upload*', function( req, res ){
+app.delete('/upload', function( req, res ){
 	res.redirect('/');
 });
 //http://localhost:3000/uploads/1515003855854/0ce3e242352582b6a1d3c550c40_prev.jpg
@@ -359,7 +360,8 @@ app.use('/upload/list', function(req, res, next) {
 //         });
 
 app.listen(app.get('port'), function() {
-	console.log('\033[96m + \033[39m app is listening on *:' + app.get('port'));
+	console.log('\033[96m + \033[39m app is running in %s mode', app.get('env'));
+	console.log('\033[96m + \033[39m app is listening on host=%s, port=%s:', app.get('host'), app.get('port'));
 });
 
 //-----------------------------------------------------
@@ -641,7 +643,7 @@ app.post('/cart/checkout', function(req, res, next) {
 		name: name,
 		email: email,
 	};
-	res.render('email/cart-success', { layout: 'email', cart: cart }, function(err, html) {
+	res.render('email/cart-success', { layout: appConfig.email.defaultLayout, cart: cart }, function(err, html) {
 		if(err) console.log("Template error");
 		mailer.send({
 			to: cart.billing.email,

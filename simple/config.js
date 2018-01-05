@@ -89,11 +89,11 @@ module.exports.dirs =
     temp: './temp',
 
     base: '/public/uploads/',
-    baseUrl: '/uploads/',
+    baseUrl: '/uploads',
 
-    default: '/public/uploads/default',
+    default: '/public/uploads/default/',
     defaultUrl: '/uploads/default',
 
-    location: '/public/uploads/location',
+    location: '/public/uploads/location/',
     locationUrl: '/uploads/location'
 };

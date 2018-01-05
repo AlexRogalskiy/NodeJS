@@ -15,34 +15,42 @@ module.exports =
 	},
 	mail:
 	{
-		template: 'pwreminder.html',
 		errorTo: '"AR" <alexander.rogalsky@yandex.ru',
 		smtp:
 		{
 			from: '"AR" <alexander.rogalsky@yandex.ru',
-		    host: 'smtp.yandex.ru',
-		    port: 465,
-		    secure: true,
-		    auth:
-		    {
-		        user: 'user@gmail.com',
-		        pass: 'pass',
-		    },
-		    //proxy: 'http://localhost:3128/',
+			host: 'smtp.yandex.ru',
+			port: 465,
+			secure: true,
+			auth:
+			{
+				user: 'alexander.rogalsky@yandex.ru',
+				pass: 'F@hRe!n#e!t$)',
+			},
+			xoauth:
+			{
+				user: 'alexander.rogalsky@yandex.ru',
+				clientId: '{Client ID}',
+				clientSecret: '{Client Secret}',
+				refreshToken: '{refresh-token}',
+				accessToken: '{cached access token}',
+				expires: 12345,
+			},
+			//proxy: 'http://localhost:3128/',
 		},
 		poolConfig:
 		{
 			pool: true,
 			from: '"AR" <alexander.rogalsky@yandex.ru',
-		    host: 'smtp.yandex.ru',
-		    port: 465,
-		    secure: true,
-		    auth:
-		    {
-		        user: 'user@gmail.com',
-		        pass: 'pass',
-		    },
-		    //proxy: 'http://localhost:3128/',
+			host: 'smtp.yandex.ru',
+			port: 465,
+			secure: true,
+			auth:
+			{
+				user: 'user@gmail.com',
+				pass: 'pass',
+			},
+			//proxy: 'http://localhost:3128/',
 		},
 	},
 };

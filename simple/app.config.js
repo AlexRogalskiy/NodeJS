@@ -21,7 +21,10 @@ module.exports =
     },
     email:
     {
-        location: '/public/email',
+        defaultLayout: 'email',
+        location: '/public/email/',
+        template: 'mail_template.html',
+        errorTemplate: 'mail_error_template.html',
     },
     js:
     {

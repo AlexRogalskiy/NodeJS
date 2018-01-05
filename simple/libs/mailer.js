@@ -1,12 +1,23 @@
 /**
  * Module dependencies
  */
-var appConfig = require('../app.config');
-var nodemailer = require('nodemailer');
-var path = require('path');
-var fs = require('fs');
-// var smtpTransport = require('nodemailer-smtp-transport');
-// var EmailTemplates = require('swig-email-templates');
+const appConfig = require('../app.config');
+const nodemailer = require('nodemailer');
+const path = require('path');
+const fs = require('fs');
+const xoauth2 = require('xoauth2');
+// const bunyan = require('bunyan');
+
+// const smtpTransport = require('nodemailer-smtp-transport');
+// const EmailTemplates = require('swig-email-templates');
+
+// generator.on('token', function(token) {
+//     console.log('New token for %s: %s', token.user, token.accessToken);
+// });
+// let logger = bunyan.createLogger({
+//     name: 'nodemailer'
+// });
+// logger.level('trace');
 
 const DEFAULT_MAIL_GENERATE_TEXT_FROM_HTML = false;
 
@@ -47,7 +58,7 @@ const DEFAULT_MAIL_ATTACHMENTS =
 		encoding: 'base64'
 	},
 	{
-			path: 'data:text/plain;base64,aGVsbG8gd29ybGQ='
+		path: 'data:text/plain;base64,aGVsbG8gd29ybGQ='
 	},
 	{
 		filename: 'map.jpg',
@@ -70,114 +81,135 @@ const DEFAULT_MAIL_ALTERNATIVES =
 
 module.exports = function(credentials)
 {
-	let mailTransport = nodemailer.createTransport(
-	{
-		host: credentials.mail.smtp.host,
-		secure: credentials.mail.smtp.secure,
-		port: credentials.mail.smtp.port,
-		auth: {
-			user: credentials.mail.smtp.auth.user,
-			pass: credentials.mail.smtp.auth.pass,
-		},
-		logger: false,
-	    debug: true,
-	});
+	function createMailTransport() {
+		let mailTransport = nodemailer.createTransport(
+		{
+			host: credentials.mail.smtp.host,
+			secure: credentials.mail.smtp.secure,
+			port: credentials.mail.smtp.port,
+			auth: {
+				user: credentials.mail.smtp.auth.user,
+				pass: credentials.mail.smtp.auth.pass,
+			},
+			logger: false,
+		    debug: true,
+		});
+		// mailTransport.use('stream', function(mail, callback){
+		//     let addresses = mail.message.getAddresses();
+		//     console.log('From: %s', JSON.stringify(addresses.from));
+		//     console.log('To: %s', JSON.stringify(addresses.to));
+		//     console.log('Cc: %s', JSON.stringify(addresses.cc));
+		//     console.log('Bcc: %s', JSON.stringify(addresses.bcc));
+		//     callback();
+		// });
+		return mailTransport;
+	};
 
-	mailTransport.use('stream', function(mail, callback){
-	    var addresses = mail.message.getAddresses();
-	    console.log('From: %s', JSON.stringify(addresses.from));
-	    console.log('To: %s', JSON.stringify(addresses.to));
-	    console.log('Cc: %s', JSON.stringify(addresses.cc));
-	    console.log('Bcc: %s', JSON.stringify(addresses.bcc));
-	    callback();
-	});
+	function logMailTransport(transport) {
+		transport.use('stream', function(mail, callback){
+		    let addresses = mail.message.getAddresses();
+		    console.log('From: %s', JSON.stringify(addresses.from));
+		    console.log('To: %s', JSON.stringify(addresses.to));
+		    console.log('Cc: %s', JSON.stringify(addresses.cc));
+		    console.log('Bcc: %s', JSON.stringify(addresses.bcc));
+		    callback();
+		});
+	};
+
+	function createMailTransport2() {
+		let mailTransport = nodemailer.createTransport(
+		{
+			host: credentials.mail.smtp.host,
+			secure: credentials.mail.smtp.secure,
+			port: credentials.mail.smtp.port,
+			auth: {
+		        xoauth2: xoauth2.createXOAuth2Generator({
+		            user: credentials.mail.smtp.xoauth.user,
+		            clientId: credentials.mail.smtp.xoauth.clientId,
+		            clientSecret: credentials.mail.smtp.xoauth.clientSecret,
+		            refreshToken: credentials.mail.smtp.xoauth.refreshToken,
+		            accessToken: credentials.mail.smtp.xoauth.accessToken,
+		            expires: credentials.mail.smtp.xoauth.expires,
+		        }),
+		    },
+			logger: false,
+		    debug: true,
+		});
+		return mailTransport;
+	};
+
+	function verifyMSAStatus(transport) {
+		transport.verify(function(error, success) {
+			if (error) {
+				return console.log(error);
+			}
+			console.log('MSA is ready');
+		});
+	};
+
+	function createMessage(data) {
+		return {
+			from: data.from || credentials.mail.smtp.from,
+			to: data.to || credentials.mail.errorTo,
+			// envelope: {
+			//     from: data.from,
+			//     to: data.to,
+			// },
+			subject: data.subject,
+			text: data.text,
+			html: data.html,
+			generateTextFromHtml: data.generateTextFromHtml || DEFAULT_MAIL_GENERATE_TEXT_FROM_HTML,
+			attachments: data.attachments || [],
+			alternatives: data.alternatives || [],
+			headers: data.headers || {},
+		};
+	};
+
+	function errorHandler(error, info) {
+		if (error) {
+			return console.log(error);
+		}
+		console.log('Message sent: %s', info.messageId);
+		console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+		console.log('Server responded with "%s"', info.response);
+	};
 
 	return {
 		send: function(data) {
-			mailTransport.verify(function(error, success) {
-				if (error) {
-					return console.log(error);
+			let mailTransport = createMailTransport();
+			verifyMSAStatus(mailTransport);
+			logMailTransport(mailTransport);
+			let message = createMessage(data);
+			mailTransport.sendMail(message, errorHandler);
+			mailTransport.close();
+		},
+		sendList: function(dataList) {
+			let mailTransport = createMailTransport();
+			verifyMSAStatus(mailTransport);
+			logMailTransport(mailTransport);
+			mailTransport.on('idle', function() {
+				while(mailTransport.isIdle() && dataList.length) {
+					this.send(dataList.shift());
 				}
-				console.log('MSA is ready');
-			});
-
-			// var messages = [...'list of messages'];
-			// mailTransport.on('idle', function() {
-			// 	while(mailTransport.isIdle() && messages.length) {
-			// 		mailTransport.send(messages.shift());
-			// 	}
-			// });
-
-			let message =
-			{
-				from: data.from || credentials.mail.smtp.from,
-				to: data.to,
-				// envelope: {
-				//     from: data.from,
-				//     to: data.to,
-				// },
-				subject: data.subject,
-				text: data.text,
-				html: data.html,
-				generateTextFromHtml: data.generateTextFromHtml || DEFAULT_MAIL_GENERATE_TEXT_FROM_HTML,
-				attachments: data.attachments || [],
-				alternatives: data.alternatives || [],
-				headers: data.headers || {},
-			};
-
-			mailTransport.sendMail(message, (error, info) =>
-			{
-				if (error) {
-					return console.log(error);
-				}
-				console.log('Message sent: %s', info.messageId);
-				console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-				mailTransport.close();
 			});
 		},
 		sendError: function(data) {
-			var body = '<h1>' + data.header + '</h1>' +
-					   'message: <br><pre>' + data.message + '</pre><br>';
-			if(data.exception) {
-				body += 'exception: <br><pre>' + data.exception + '</pre><br>';
-			}
-			if(data.filename) {
-				body += 'filename: <br><pre>' + data.filename + '</pre><br>';
-			}
-
-			let message =
-			{
-				from: data.from || credentials.mail.smtp.from,
-				to: data.to || credentials.mail.errorTo,
-				// envelope: {
-				//     from: data.from,
-				//     to: data.to,
-				// },
-				subject: data.subject,
-				text: data.text,
-				html: data.html,
-				generateTextFromHtml: data.generateTextFromHtml || DEFAULT_MAIL_GENERATE_TEXT_FROM_HTML,
-				attachments: data.attachments || [],
-				alternatives: data.alternatives || [],
-				headers: data.headers || {},
-			};
-
-			mailTransport.sendMail(message, (error, info) =>
-			{
-				if (error) {
-					return console.log(error);
-				}
-				console.log('Message sent: %s', info.messageId);
-				console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-				mailTransport.close();
-			});
-		},
-		sendTemplate: function(data) {
-			var templates = new EmailTemplates();
-			var sendPwdReminder = mailTransport.templateSender({
+			// var body = '<h1>' + data.header + '</h1>' +
+			// 		   'message: <br><pre>' + data.message + '</pre><br>';
+			// if(data.exception) {
+			// 	body += 'exception: <br><pre>' + data.exception + '</pre><br>';
+			// }
+			// if(data.filename) {
+			// 	body += 'filename: <br><pre>' + data.filename + '</pre><br>';
+			// }
+			let mailTransport = createMailTransport();
+			verifyMSAStatus(mailTransport);
+			logMailTransport(mailTransport);
+			var templates = new EmailTemplates(path.join(__dirname, appConfig.email.location));
+			var teplateRender = mailTransport.templateSender({
 			    render: function(context, callback)
 			    {
-					templates.render(credentials.mail.template, context, function(err, html, text) {
+					templates.render(appConfig.email.errorTemplate, context, function(err, html, text) {
 			            if(error) {
 			                return callback(error);
 			            }
@@ -189,26 +221,33 @@ module.exports = function(credentials)
 				from: data.from || credentials.mail.smtp.from,
 			});
 
-			// // send a message based on provided templates 
-			// sendPwdReminder(mailData, context, callback);
-			// // or 
-			// sendPwdReminder(mailData, context).then(...).catch(...);
-
-			sendPwdReminder({
-			    to: data.to,
-			    subject: data.subject,
-			    //text: data.text,
-				//html: data.html,
+			let message = createMessage(data);
+			teplateRender(message, data.templateContext, errorHandler);
+			mailTransport.close();
+		},
+		sendTemplate: function(data) {
+			let mailTransport = createMailTransport();
+			verifyMSAStatus(mailTransport);
+			logMailTransport(mailTransport);
+			var templates = new EmailTemplates(path.join(__dirname, appConfig.email.location));
+			var teplateRender = mailTransport.templateSender({
+			    render: function(context, callback)
+			    {
+					templates.render(appConfig.email.template, context, function(err, html, text) {
+			            if(error) {
+			                return callback(error);
+			            }
+			            callback(null, { html: html, text: text });
+					});
+				}
 			},
 			{
-				data: data.data,
-			}, function(error, info) {
-				if(error) {
-					return console.log(error);
-				} else {
-					console.log('Password reminder sent');
-				}
+				from: data.from || credentials.mail.smtp.from,
 			});
+
+			let message = createMessage(data);
+			teplateRender(message, data.templateContext, errorHandler);
+			mailTransport.close();
 		},
 	};
 };
