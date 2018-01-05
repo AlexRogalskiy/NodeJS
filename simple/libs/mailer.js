@@ -82,7 +82,7 @@ const DEFAULT_MAIL_ALTERNATIVES =
 module.exports = function(credentials)
 {
 	function createMailTransport() {
-		let mailTransport = nodemailer.createTransport(
+		return nodemailer.createTransport(
 		{
 			host: credentials.mail.smtp.host,
 			secure: credentials.mail.smtp.secure,
@@ -94,15 +94,6 @@ module.exports = function(credentials)
 			logger: false,
 		    debug: true,
 		});
-		// mailTransport.use('stream', function(mail, callback){
-		//     let addresses = mail.message.getAddresses();
-		//     console.log('From: %s', JSON.stringify(addresses.from));
-		//     console.log('To: %s', JSON.stringify(addresses.to));
-		//     console.log('Cc: %s', JSON.stringify(addresses.cc));
-		//     console.log('Bcc: %s', JSON.stringify(addresses.bcc));
-		//     callback();
-		// });
-		return mailTransport;
 	};
 
 	function logMailTransport(transport) {
