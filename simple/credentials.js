@@ -24,12 +24,12 @@ module.exports =
 			secure: true,
 			auth:
 			{
-				user: 'alexander.rogalsky@yandex.ru',
-				pass: 'F@hRe!n#e!t$)',
+				user: 'user@gmail.com',
+				pass: 'password',
 			},
 			xoauth:
 			{
-				user: 'alexander.rogalsky@yandex.ru',
+				user: 'user@gmail.com',
 				clientId: '{Client ID}',
 				clientSecret: '{Client Secret}',
 				refreshToken: '{refresh-token}',
@@ -41,7 +41,7 @@ module.exports =
 		poolConfig:
 		{
 			pool: true,
-			from: '"AR" <alexander.rogalsky@yandex.ru',
+			from: '"AR" <user@gmail.com',
 			host: 'smtp.yandex.ru',
 			port: 465,
 			secure: true,

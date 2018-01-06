@@ -22,14 +22,14 @@ var fortune = require('./libs/fortune');
 var cartValidation = require('./libs/cartValidation');
 
 var mailer = require('./libs/mailer')(credentials);
-mailer.send({
-	to: 'rogalsky.alexander@gmail.com',
-	subject: 'Nodemailer is unicode friendly ✔',
-	text: 'Hello to myself!',
-	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
-	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
-	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
-});
+// mailer.send({
+// 	to: 'rogalsky.alexander@gmail.com',
+// 	subject: 'Nodemailer is unicode friendly ✔',
+// 	text: 'Hello to myself!',
+// 	html: '<p><b>Hello</b> to myself <img src="cid:note@example.com"/></p>' +
+// 	      '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@example.com"/></p>' +
+// 	      'Embedded image: <img src="cid:unique@kreata.ee"/>',
+// });
 
 // var routes = require('./routes');
 var tours = require('./tours');
